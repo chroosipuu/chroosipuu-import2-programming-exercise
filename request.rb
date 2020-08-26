@@ -3,18 +3,17 @@
 require 'httparty'
 require 'json'
 
-
 # Class to handel requests to Pipedrive api and return results as list of Pipedrive Objects
 class Request
+  DEAL_HEADERS = %w[title org_name person_name formatted_value currency status expected_close_date].freeze
+  PRODUCT_HEADERS = %w[id name code description unit tax category prices].freeze
+  ACTIVITY_HEADERS = %w[id type due_date due_time duration subject public_description location_formatted_address note].freeze
+  LEAD_HEADERS = %w[id title owner_id source_name expected_close_date note].freeze
+  PERSON_HEADERS = %w[id name person_name open_deals_count closed_deals_count participant_open_deals_count participant_closed_deals_count].freeze
 
-  DEAL_HEADERS = ['title', 'org_name', 'person_name', 'formatted_value', 'currency', 'status', 'expected_close_date']
-  PRODUCT_HEADERS = ['id', 'name', 'code', 'description', 'unit', 'tax', 'category', 'prices']
-  ACTIVITY_HEADERS = ['id', 'type', 'due_date', 'due_time', 'duration', 'subject', 'public_description', 'location_formatted_address', 'note']
-  LEAD_HEADERS = ['id', 'title', 'owner_id', 'source_name', 'expected_close_date', 'note']
-  PERSON_HEADERS = ['id', 'name', 'person_name', 'open_deals_count', 'closed_deals_count', 'participant_open_deals_count', 'participant_closed_deals_count']
-
-  # @param [Connection] connection
-  # @return [Array<PipedriveDeal>]
+  # Handles request to get deals from Pipedrive API
+  # @param connection [Connection] the connection object to connect to the Pipedrive API
+  # @return [Array<Hash>] a list of the Pipedrive deal object data hashed with DEAL_HEADERS values as keys
   def self.deals(connection)
     data = request_data(connection, '/deals')
     deals = []
@@ -24,8 +23,9 @@ class Request
     deals
   end
 
-  # @param [Connection] connection
-  # @return [Array<PipedriveProduct>]
+  # Handles request to get products from Pipedrive API
+  # @param connection [Connection] the connection object to connect to the Pipedrive API
+  # @return [Array<Hash>] a list of the Pipedrive product object data hashed with PRODUCT_HEADERS values as keys
   def self.products(connection)
     data = request_data(connection, '/products')
     products = []
@@ -35,8 +35,9 @@ class Request
     products
   end
 
-  # @param [Connection] connection
-  # @return [Array<PipedriveActivity>]
+  # Handles request to get activities from Pipedrive API
+  # @param connection [Connection] the connection object to connect to the Pipedrive API
+  # @return [Array<Hash>] a list of the Pipedrive activity object data hashed with PRODUCT_HEADERS values as keys
   def self.activities(connection)
     data = request_data(connection, '/activities')
     activities = []
@@ -46,8 +47,9 @@ class Request
     activities
   end
 
-  # @param [Connection] connection
-  # @return [Array<PipedriveLead>]
+  # Handles request to get leads from Pipedrive API
+  # @param connection [Connection] the connection object to connect to the Pipedrive API
+  # @return [Array<Hash>] a list of the Pipedrive lead object data hashed with ACTIVITY_HEADERS values as keys
   def self.leads(connection)
     data = request_data(connection, '/leads')
     leads = []
@@ -57,6 +59,9 @@ class Request
     leads
   end
 
+  # Handles request to get persons from Pipedrive API
+  # @param connection [Connection] the connection object to connect to the Pipedrive API
+  # @return [Array<Hash>] a list of the Pipedrive person object data hashed with PERSON_HEADERS values as keys
   def self.persons(connection)
     data = request_data(connection, '/persons')
     persons = []
@@ -66,16 +71,21 @@ class Request
     persons
   end
 
+  # Extracts only the data given in the header from the data file
+  # @param headers [Array<String>] list of headers for data to extract from the Pipedrive data object
+  # @param data [Hash] the Pipedrive data object as a Hash
+  # @return [Hash] a hash with header values as keys to data
   def self.extract_data(headers, data)
     new_data = {}
-    headers.each { |header| new_data[header] = data[header]}
+    headers.each { |header| new_data[header] = data[header] }
     new_data
   end
 
-  # @param [String] company_domain
-  # @param [String] end_point
-  # @param [Hash] params
-  # @return [String]
+  # Builds the url to make requests to the Pipedrive API
+  # @param company_domain [String] the company domain to connect to Pipedrive API
+  # @param end_point [String] the Pipedrive API endpoint to build query url for
+  # @param params [Hash] any params to add to the query url
+  # @return [String] the url to make query to Pipedrive API with the given info
   def self.build_url(company_domain, end_point, params)
     url = "https://#{company_domain}.pipedrive.com/v1#{end_point}"
     # Loop over params and add to url
@@ -85,9 +95,10 @@ class Request
     url
   end
 
-  # @param [Connection] connection
-  # @param [String] end_point
-  # @return [Array<Hash>]
+  # Makes the request to the Pipedrive API to get the desired data
+  # @param connection [Connection] the connection object to connect to the Pipedrive API
+  # @param end_point [String] the Pipedrive API endpoint to build query url for
+  # @return [Array<Hash>] a list of the JSON parsed query response body data
   def self.request_data(connection, end_point)
     page_start = 0
 
@@ -95,8 +106,8 @@ class Request
     #  Loop while there are more items in collection
     loop do
       params = {
-          start: page_start.to_s,
-          api_token: connection.api_token
+        start: page_start.to_s,
+        api_token: connection.api_token
       }
       url = build_url(connection.company_domain, end_point, params)
       response = HTTParty.get(url)

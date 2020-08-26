@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Connection class to store company domain and api token for pipedrive requests
+# Connection class to store company domain and api token for Pipedrive API requests
 class Connection
   attr_reader :company_domain
   attr_reader :api_token
