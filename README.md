@@ -1,8 +1,8 @@
 # Programming Exercise
 ## Requirements
-```
-gem install httparty
-```
+
+- httparty
+
 ## Export codes
 ```
 'export_deals'
