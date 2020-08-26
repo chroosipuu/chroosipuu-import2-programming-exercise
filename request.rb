@@ -20,9 +20,6 @@ class Request
     deals_fields = request_data(connection, '/dealFields')
     field_full_names = {}
     deals_fields.each { |field| field_full_names[field['key']] = field['name'] }
-    puts deals_fields
-    puts field_full_names
-
 
     deals = []
     data.each do |deal_data|
