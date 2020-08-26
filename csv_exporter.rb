@@ -10,7 +10,10 @@ class CSVExporter
   # Runs the function to export the data specified in the Export object
   # @param export [Export] the Export object containing information on the export job
   def self.execute(export)
+    # Make a separate directory for CSV files if does not exist
     Dir.mkdir @directory_name unless File.exist?(@directory_name)
+
+    # Run the export function for the Pipedrive object specified in the Export
     send(export.export_function, export.connection)
   end
 
@@ -20,7 +23,9 @@ class CSVExporter
   def self.write_to_csv(csv_file, data)
     return if data.empty?
 
+    # Write csv file headers
     csv_file << data.first.keys
+    # Write data to csv file
     data.each do |data_object|
       csv_file << data_object.values
     end

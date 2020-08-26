@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-#
+
 require_relative 'connection'
 require_relative 'export'
 require_relative 'csv_exporter'

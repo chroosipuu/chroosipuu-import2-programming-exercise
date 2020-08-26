@@ -16,6 +16,7 @@ class Request
   # @return [Array<Hash>] a list of the Pipedrive deal object data hashed with DEAL_HEADERS values as keys
   def self.deals(connection)
     data = request_data(connection, '/deals')
+
     deals = []
     data.each do |deal_data|
       deals << extract_data(DEAL_HEADERS, deal_data)
@@ -28,6 +29,7 @@ class Request
   # @return [Array<Hash>] a list of the Pipedrive product object data hashed with PRODUCT_HEADERS values as keys
   def self.products(connection)
     data = request_data(connection, '/products')
+
     products = []
     data.each do |product_data|
       products << extract_data(PRODUCT_HEADERS, product_data)
@@ -39,7 +41,9 @@ class Request
   # @param connection [Connection] the connection object to connect to the Pipedrive API
   # @return [Array<Hash>] a list of the Pipedrive activity object data hashed with PRODUCT_HEADERS values as keys
   def self.activities(connection)
+    # Get activities data from Pipedrive API
     data = request_data(connection, '/activities')
+
     activities = []
     data.each do |activity_data|
       activities << extract_data(ACTIVITY_HEADERS, activity_data)
@@ -52,6 +56,7 @@ class Request
   # @return [Array<Hash>] a list of the Pipedrive lead object data hashed with ACTIVITY_HEADERS values as keys
   def self.leads(connection)
     data = request_data(connection, '/leads')
+
     leads = []
     data.each do |lead_data|
       leads << extract_data(LEAD_HEADERS, lead_data)
@@ -100,6 +105,7 @@ class Request
   # @param end_point [String] the Pipedrive API endpoint to build query url for
   # @return [Array<Hash>] a list of the JSON parsed query response body data
   def self.request_data(connection, end_point)
+    # Start at 0 keep track of page_start in case several requests are needed to get all data
     page_start = 0
 
     data = []
@@ -112,6 +118,7 @@ class Request
       url = build_url(connection.company_domain, end_point, params)
       response = HTTParty.get(url)
 
+      # Handel if response is unsuccessful
       unless response['success']
         puts "Error #{response['errorCode']}: #{response['error']}"
         # If error due to x-ratelimit-limit wait 2 sec and retry
