@@ -24,7 +24,17 @@ class CSVExporter
     return if data.empty?
 
     # Write csv file headers
-    csv_file << data.first.keys
+    headers = []
+    # Format headers
+    data.first.keys.each do |header|
+      # Capitalize and change '_' to ' '
+      header = header.capitalize()
+      formatted_header = header.gsub! '_', ' '
+      # If no changes made keep original header
+      formatted_header = formatted_header ? formatted_header : header
+      headers << formatted_header
+    end
+    csv_file << headers
     # Write data to csv file
     data.each do |data_object|
       csv_file << data_object.values
@@ -44,8 +54,23 @@ class CSVExporter
   # @param connection [Connection] the connection object to connect to the Pipedrive API
   def self.export_products(connection)
     products = Request.products(connection)
+    product_prices = []
+    products.each do |product|
+      prices = product.delete('prices')
+      prices.each do |price|
+        price['Product Name'] = product["Name"]
+        price.delete('id')
+        price.delete('product_id')
+      end
+      product_prices.concat(prices)
+    end
+
     CSV.open("#{@directory_name}/products.csv", 'wb') do |csv|
       write_to_csv(csv, products)
+    end
+
+    CSV.open("#{@directory_name}/product_prices.csv", 'wb') do |csv|
+      write_to_csv(csv, product_prices)
     end
   end
 

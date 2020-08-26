@@ -6,10 +6,10 @@ require 'json'
 # Class to handel requests to Pipedrive api and return results as list of Pipedrive Objects
 class Request
   DEAL_HEADERS = %w[title org_name person_name formatted_value currency status expected_close_date].freeze
-  PRODUCT_HEADERS = %w[id name code description unit tax category prices].freeze
-  ACTIVITY_HEADERS = %w[id type due_date due_time duration subject public_description location_formatted_address note].freeze
-  LEAD_HEADERS = %w[id title owner_id source_name expected_close_date note].freeze
-  PERSON_HEADERS = %w[id name person_name open_deals_count closed_deals_count participant_open_deals_count participant_closed_deals_count].freeze
+  PRODUCT_HEADERS = %w[name code description unit tax category prices].freeze
+  ACTIVITY_HEADERS = %w[subject type due_date due_time duration public_description location_formatted_address note].freeze
+  LEAD_HEADERS = %w[title expected_close_date value note].freeze
+  PERSON_HEADERS = %w[name open_deals_count closed_deals_count participant_open_deals_count participant_closed_deals_count].freeze
 
   # Handles request to get deals from Pipedrive API
   # @param connection [Connection] the connection object to connect to the Pipedrive API
@@ -17,9 +17,16 @@ class Request
   def self.deals(connection)
     data = request_data(connection, '/deals')
 
+    deals_fields = request_data(connection, '/dealFields')
+    field_full_names = {}
+    deals_fields.each { |field| field_full_names[field['key']] = field['name'] }
+    puts deals_fields
+    puts field_full_names
+
+
     deals = []
     data.each do |deal_data|
-      deals << extract_data(DEAL_HEADERS, deal_data)
+      deals << extract_data(DEAL_HEADERS, field_full_names, deal_data)
     end
     deals
   end
@@ -30,9 +37,13 @@ class Request
   def self.products(connection)
     data = request_data(connection, '/products')
 
+    products_fields = request_data(connection, '/productFields')
+    field_full_names = {}
+    products_fields.each { |field| field_full_names[field['key']] = field['name'] }
+
     products = []
     data.each do |product_data|
-      products << extract_data(PRODUCT_HEADERS, product_data)
+      products << extract_data(PRODUCT_HEADERS, field_full_names, product_data)
     end
     products
   end
@@ -41,12 +52,15 @@ class Request
   # @param connection [Connection] the connection object to connect to the Pipedrive API
   # @return [Array<Hash>] a list of the Pipedrive activity object data hashed with PRODUCT_HEADERS values as keys
   def self.activities(connection)
-    # Get activities data from Pipedrive API
     data = request_data(connection, '/activities')
+
+    activities_fields = request_data(connection, '/activityFields')
+    field_full_names = {}
+    activities_fields.each { |field| field_full_names[field['key']] = field['name'] }
 
     activities = []
     data.each do |activity_data|
-      activities << extract_data(ACTIVITY_HEADERS, activity_data)
+      activities << extract_data(ACTIVITY_HEADERS, field_full_names, activity_data)
     end
     activities
   end
@@ -57,9 +71,13 @@ class Request
   def self.leads(connection)
     data = request_data(connection, '/leads')
 
+    leads_fields = request_data(connection, '/leadFields')
+    field_full_names = {}
+    leads_fields.each { |field| field_full_names[field['key']] = field['name'] }
+
     leads = []
     data.each do |lead_data|
-      leads << extract_data(LEAD_HEADERS, lead_data)
+      leads << extract_data(LEAD_HEADERS, field_full_names, lead_data)
     end
     leads
   end
@@ -69,9 +87,14 @@ class Request
   # @return [Array<Hash>] a list of the Pipedrive person object data hashed with PERSON_HEADERS values as keys
   def self.persons(connection)
     data = request_data(connection, '/persons')
+
+    persons_fields = request_data(connection, '/personFields')
+    field_full_names = {}
+    persons_fields.each { |field| field_full_names[field['key']] = field['name'] }
+
     persons = []
     data.each do |person_data|
-      persons << extract_data(PERSON_HEADERS, person_data)
+      persons << extract_data(PERSON_HEADERS, field_full_names, person_data)
     end
     persons
   end
@@ -80,9 +103,10 @@ class Request
   # @param headers [Array<String>] list of headers for data to extract from the Pipedrive data object
   # @param data [Hash] the Pipedrive data object as a Hash
   # @return [Hash] a hash with header values as keys to data
-  def self.extract_data(headers, data)
+  def self.extract_data(headers, field_full_names, data)
     new_data = {}
-    headers.each { |header| new_data[header] = data[header] }
+
+    headers.each { |header| new_data[field_full_names[header] ? field_full_names[header] : header] = data[header] }
     new_data
   end
 
