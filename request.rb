@@ -146,6 +146,8 @@ class Request
         if response['errorCode'] == 429
           sleep(2)
           next
+        else
+          raise "Error #{response['errorCode']}: #{response['error']}"
         end
       end
 
